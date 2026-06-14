@@ -15,9 +15,9 @@ A scalable Node.js application that notifies users of new job postings based on 
 - Database Driver: pg
 
 ## 🚀 Upcoming Features
-- [ ] Message Queues: Redis & BullMQ integration for asynchronous email delivery at scale.
+- [x] Message Queues: Redis & BullMQ integration for asynchronous email delivery at scale.
 - [ ] Automated Data Ingestion: Web scraper using Cheerio/Puppeteer to automatically fetch jobs via Cron.
-- [ ] Real Notifications: Integration with Nodemailer/SendGrid for actual email delivery.
+- [x] Real Notifications: Integration with Nodemailer/SendGrid for actual email delivery.
 
 ## 💻 Local Setup
 1. Clone the repository
@@ -29,6 +29,11 @@ A scalable Node.js application that notifies users of new job postings based on 
    ```env
    PORT=3000
    DATABASE_URL=your_postgres_connection_string
+   REDIS_URL=your_upstash_redis_url
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=your_email@gmail.com
+   SMTP_PASS=your_app_password
    ```
 4. Start the server: 
    ```bash

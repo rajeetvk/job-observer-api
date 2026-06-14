@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { emailQueue } = require('../services/emailQueue');
 
 const postJob = async (req, res) => {
     const { title, company, url, tags } = req.body;
@@ -19,13 +20,20 @@ const postJob = async (req, res) => {
             [tags]
         );
 
-        subscribers.rows.forEach(sub => {
-            console.log(`[EMAIL ALERT] To: ${sub.email} - New Job Match: ${title} at ${company}!`);
-        });
+        // --- NEW QUEUE LOGIC ---
+        // Instead of processing emails here, drop them into Redis!
+        for (const sub of subscribers.rows) {
+            await emailQueue.add('sendEmailJob', {
+                email: sub.email,
+                title: title,
+                company: company
+            });
+        }
 
+        // Respond to the user INSTANTLY, even if 10,000 emails are in the queue.
         res.status(201).json({ 
-            message: 'Job posted successfully!', 
-            users_notified: subscribers.rows.length,
+            message: 'Job posted successfully! Emails are queuing in the background.', 
+            queued_emails: subscribers.rows.length,
             job: newJob
         });
     } catch (err) {

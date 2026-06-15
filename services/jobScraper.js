@@ -8,9 +8,36 @@ const fetchAndProcessJobs = async () => {
     console.log('[CRON] 🕵️‍♂️ Searching the web for new jobs...');
 
     try {
-        // 1. Fetch 5 recent remote jobs from the public Remotive API
-        const response = await axios.get('https://remotive.com/api/remote-jobs?limit=5');
-        const jobs = response.data.jobs;
+        // 1. Fetch the raw HTML from Hacker News Jobs board
+        const cheerio = require('cheerio');
+        const response = await axios.get('https://news.ycombinator.com/jobs');
+        
+        // 2. Load the HTML into Cheerio so we can scrape it
+        const $ = cheerio.load(response.data);
+        const jobs = [];
+
+        // Scrape the first 5 job listings
+        $('.athing').slice(0, 5).each((i, el) => {
+            const a = $(el).find('.titleline a').first();
+            const rawTitle = a.text();
+            
+            // Extract the company name (everything before "is hiring" or "Is Hiring")
+            const companySplit = rawTitle.split(/is hiring/i);
+            const companyName = companySplit.length > 1 ? companySplit[0].trim() : 'Unknown YC Startup';
+
+            // Fix relative URLs
+            let url = a.attr('href');
+            if (url.startsWith('item?')) { 
+                url = 'https://news.ycombinator.com/' + url; 
+            }
+
+            jobs.push({
+                title: rawTitle,
+                company_name: companyName,
+                url: url,
+                category: 'Software Engineering' // Defaulting to software engineering for HN jobs
+            });
+        });
 
         for (const job of jobs) {
             // 2. Check if we already have this job in our database

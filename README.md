@@ -16,7 +16,7 @@ A scalable Node.js application that notifies users of new job postings based on 
 
 ## 🚀 Upcoming Features
 - [x] Message Queues: Redis & BullMQ integration for asynchronous email delivery at scale.
-- [ ] Automated Data Ingestion: Web scraper using Cheerio/Puppeteer to automatically fetch jobs via Cron.
+- [x] Automated Data Ingestion: Web scraper using Cheerio/Puppeteer to automatically fetch jobs via Cron.
 - [x] Real Notifications: Integration with Nodemailer/SendGrid for actual email delivery.
 
 ## 💻 Local Setup

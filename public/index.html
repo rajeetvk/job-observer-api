@@ -39,7 +39,7 @@
         .auth-container {
             max-width: 400px;
             width: 100%;
-            display: block; /* visible by default */
+            display: none; /* toggled via JS */
         }
 
         @media (max-width: 768px) {
@@ -213,7 +213,7 @@
 </head>
 <body>
 
-    <!-- AUTHENTICATION VIEW -->
+    <!-- AUTHENTICATION VIEW (Login / Signup) -->
     <div class="auth-container glass-card" id="authView">
         <h1 id="authTitle">Welcome Back</h1>
         <p class="subtitle" id="authSubtitle">Log in to manage your job alerts.</p>
@@ -229,14 +229,48 @@
                 <input type="email" id="authEmail" placeholder="john@example.com" required>
             </div>
 
-            <div class="form-group">
+            <div class="form-group" id="passwordGroup">
                 <label for="authPassword">Password</label>
                 <input type="password" id="authPassword" placeholder="••••••••" required>
             </div>
 
             <button type="submit" id="authSubmitBtn">Log In</button>
             <div class="toggle-auth" id="toggleAuthBtn">Don't have an account? Sign up.</div>
+            <div class="toggle-auth" id="forgotPasswordBtn" style="margin-top: 0.5rem;">Forgot Password?</div>
             <div id="authMessage" class="message"></div>
+        </form>
+    </div>
+
+    <!-- FORGOT PASSWORD VIEW -->
+    <div class="auth-container glass-card" id="forgotPasswordView">
+        <h1>Reset Password</h1>
+        <p class="subtitle">Enter your email and we will send you a reset link.</p>
+        
+        <form id="forgotPasswordForm">
+            <div class="form-group">
+                <label for="forgotEmail">Email Address</label>
+                <input type="email" id="forgotEmail" placeholder="john@example.com" required>
+            </div>
+
+            <button type="submit">Send Reset Link</button>
+            <div class="toggle-auth" id="backToLoginBtn">Back to Login</div>
+            <div id="forgotMessage" class="message"></div>
+        </form>
+    </div>
+
+    <!-- RESET PASSWORD VIEW (Opened via Email Link) -->
+    <div class="auth-container glass-card" id="resetPasswordView">
+        <h1>New Password</h1>
+        <p class="subtitle">Enter your new secure password.</p>
+        
+        <form id="resetPasswordForm">
+            <div class="form-group">
+                <label for="newPassword">New Password</label>
+                <input type="password" id="newPassword" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit">Update Password</button>
+            <div id="resetMessage" class="message"></div>
         </form>
     </div>
 
@@ -278,22 +312,34 @@
     </div>
 
     <script>
-        let isLogin = true;
-        
-        // --- AUTHENTICATION LOGIC ---
+        // Check URL for reset token
+        const urlParams = new URLSearchParams(window.location.search);
+        const resetToken = urlParams.get('resetToken');
+
         const authView = document.getElementById('authView');
+        const forgotPasswordView = document.getElementById('forgotPasswordView');
+        const resetPasswordView = document.getElementById('resetPasswordView');
         const dashboardView = document.getElementById('dashboardView');
+        const authMessage = document.getElementById('authMessage');
+
+        let isLogin = true;
+
+        if (resetToken) {
+            // User came from email link
+            resetPasswordView.style.display = 'block';
+        } else if (localStorage.getItem('token')) {
+            showDashboard();
+        } else {
+            authView.style.display = 'block';
+        }
+
+        // --- AUTHENTICATION LOGIC ---
         const authTitle = document.getElementById('authTitle');
         const authSubtitle = document.getElementById('authSubtitle');
         const nameGroup = document.getElementById('nameGroup');
         const authSubmitBtn = document.getElementById('authSubmitBtn');
         const toggleAuthBtn = document.getElementById('toggleAuthBtn');
-        const authMessage = document.getElementById('authMessage');
-
-        // Check if already logged in
-        if (localStorage.getItem('token')) {
-            showDashboard();
-        }
+        const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
 
         toggleAuthBtn.addEventListener('click', () => {
             isLogin = !isLogin;
@@ -305,6 +351,7 @@
                 document.getElementById('authName').removeAttribute('required');
                 authSubmitBtn.textContent = 'Log In';
                 toggleAuthBtn.textContent = "Don't have an account? Sign up.";
+                forgotPasswordBtn.style.display = 'block';
             } else {
                 authTitle.textContent = 'Create Account';
                 authSubtitle.textContent = 'Sign up to start receiving job alerts.';
@@ -312,7 +359,18 @@
                 document.getElementById('authName').setAttribute('required', 'true');
                 authSubmitBtn.textContent = 'Sign Up';
                 toggleAuthBtn.textContent = "Already have an account? Log in.";
+                forgotPasswordBtn.style.display = 'none';
             }
+        });
+
+        forgotPasswordBtn.addEventListener('click', () => {
+            authView.style.display = 'none';
+            forgotPasswordView.style.display = 'block';
+        });
+
+        document.getElementById('backToLoginBtn').addEventListener('click', () => {
+            forgotPasswordView.style.display = 'none';
+            authView.style.display = 'block';
         });
 
         document.getElementById('authForm').addEventListener('submit', async (e) => {
@@ -346,6 +404,61 @@
             }
         });
 
+        // --- FORGOT PASSWORD LOGIC ---
+        document.getElementById('forgotPasswordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value;
+            const msgBox = document.getElementById('forgotMessage');
+
+            try {
+                const res = await fetch('/api/forgotpassword', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    msgBox.className = 'message success';
+                    msgBox.textContent = data.message;
+                } else {
+                    throw new Error(data.error || 'Failed to send reset link');
+                }
+            } catch (err) {
+                msgBox.className = 'message error';
+                msgBox.textContent = err.message;
+            }
+        });
+
+        // --- RESET PASSWORD LOGIC ---
+        document.getElementById('resetPasswordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPassword = document.getElementById('newPassword').value;
+            const msgBox = document.getElementById('resetMessage');
+
+            try {
+                const res = await fetch(`/api/resetpassword/${resetToken}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: newPassword })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    msgBox.className = 'message success';
+                    msgBox.textContent = 'Password reset! You can now log in.';
+                    setTimeout(() => {
+                        window.location.href = '/'; // clear token from URL
+                    }, 2000);
+                } else {
+                    throw new Error(data.error || 'Failed to reset password');
+                }
+            } catch (err) {
+                msgBox.className = 'message error';
+                msgBox.textContent = err.message;
+            }
+        });
+
         document.getElementById('logoutBtn').addEventListener('click', () => {
             localStorage.clear();
             dashboardView.style.display = 'none';
@@ -376,7 +489,6 @@
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + localStorage.getItem('token')
                     },
-                    // Send the stored name/email since the backend subscription controller expects it
                     body: JSON.stringify({ 
                         name: localStorage.getItem('name'), 
                         email: localStorage.getItem('email'), 
@@ -432,7 +544,10 @@
                 feed.innerHTML = '<p style="color: #ef4444; text-align: center;">Failed to load jobs.</p>';
             }
         }
-        setInterval(loadJobs, 30000);
+        
+        if (localStorage.getItem('token')) {
+            setInterval(loadJobs, 30000);
+        }
     </script>
 </body>
 </html>

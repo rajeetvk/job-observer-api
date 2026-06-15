@@ -28,23 +28,41 @@ const emailWorker = new Worker('EmailAlertsQueue', async (job) => {
             },
         });
 
-        // Set up email data
-        const mailOptions = {
-            from: `"Job Alert Platform" <${process.env.SMTP_USER}>`, // sender address
-            to: email, // list of receivers
-            subject: `New Job Alert: ${title} at ${company}`, // Subject line
-            html: `
-                <h2>Good news! A new job matching your tags was posted.</h2>
-                <p><strong>Job Title:</strong> ${title}</p>
-                <p><strong>Company:</strong> ${company}</p>
-                <br>
-                <p>Best of luck with your application!</p>
-            `, // html body
-        };
+        let mailOptions;
+
+        if (job.name === 'resetPassword') {
+            const { resetUrl } = job.data;
+            mailOptions = {
+                from: `"Job Alert Platform" <${process.env.SMTP_USER}>`,
+                to: email,
+                subject: `Password Reset Request`,
+                html: `
+                    <h2>You requested a password reset.</h2>
+                    <p>Click the link below to reset your password. This link is valid for 1 hour.</p>
+                    <a href="${resetUrl}">${resetUrl}</a>
+                    <p>If you did not request this, please ignore this email.</p>
+                `,
+            };
+        } else {
+            // Default job alert email
+            const { title, company } = job.data;
+            mailOptions = {
+                from: `"Job Alert Platform" <${process.env.SMTP_USER}>`,
+                to: email,
+                subject: `New Job Alert: ${title} at ${company}`,
+                html: `
+                    <h2>Good news! A new job matching your tags was posted.</h2>
+                    <p><strong>Job Title:</strong> ${title}</p>
+                    <p><strong>Company:</strong> ${company}</p>
+                    <br>
+                    <p>Best of luck with your application!</p>
+                `,
+            };
+        }
 
         // Send the email
         const info = await transporter.sendMail(mailOptions);
-        console.log(`[BACKGROUND WORKER] ✅ Sent Real Email to ${email} - Message ID: ${info.messageId}`);
+        console.log(`[BACKGROUND WORKER] ✅ Sent Real Email (${job.name}) to ${email} - Message ID: ${info.messageId}`);
     } catch (error) {
         console.error(`[BACKGROUND WORKER] ❌ Failed to send email to ${email}:`, error);
         throw error; // Re-throw the error so BullMQ knows the job failed and can retry

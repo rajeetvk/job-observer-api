@@ -2,22 +2,15 @@
 
 A scalable Node.js application that notifies users of new job postings based on their subscribed tags (e.g., "Node.js", "Remote", "SDE Intern"). Built with the Observer Pattern architecture.
 
-## 🌟 Current Features (Phase 2 MVP)
-- MVC Architecture: Clean, modular, and maintainable project structure.
-- PostgreSQL Database: Fully relational schema using Cloud Neon DB.
-- Smart Subscription Engine: Users subscribe to specific job tags.
-- Native Array Matching: Uses PostgreSQL ANY() arrays to efficiently match job tags to user subscriptions.
-- Observer Pattern Trigger: Instantly identifies and alerts subscribers when a new job is posted.
-
-## 🛠️ Tech Stack
-- Backend: Node.js, Express.js
-- Database: PostgreSQL (Neon Cloud)
-- Database Driver: pg
-
-## 🚀 Upcoming Features
-- [x] Message Queues: Redis & BullMQ integration for asynchronous email delivery at scale.
-- [x] Automated Data Ingestion: Fetch jobs continuously using remote APIs (like Remotive) via Node Cron.
-- [x] Real Notifications: Integration with Nodemailer/SendGrid for actual email delivery.
+## 🌟 Core Features (Phase 3 Complete)
+- **MVC Architecture:** Clean, modular, and maintainable backend structure.
+- **PostgreSQL Database:** Fully relational schema using Cloud Neon DB with Native Array Matching (`ANY()`).
+- **Observer Pattern:** Instantly triggers alerts when new scraped jobs match user subscription tags.
+- **Message Queuing (Redis & BullMQ):** Offloads heavy email delivery tasks to background workers, keeping the API lightning fast.
+- **JWT Authentication & Bcrypt Security:** Secure user registration, password hashing, and route protection.
+- **Automated Data Ingestion:** Background cron workers fetch remote jobs continuously via API integration.
+- **Real Notifications:** Integration with Nodemailer for actual email delivery.
+- **Glassmorphism Frontend Dashboard:** Beautiful, responsive UI for users to manage subscriptions and view the live job feed.
 
 ## 💻 Local Setup
 1. Clone the repository

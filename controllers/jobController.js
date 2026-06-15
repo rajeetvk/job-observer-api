@@ -42,4 +42,16 @@ const postJob = async (req, res) => {
     }
 };
 
-module.exports = { postJob };
+const getJobs = async (req, res) => {
+    try {
+        const jobsResult = await pool.query(
+            `SELECT * FROM jobs ORDER BY id DESC LIMIT 20`
+        );
+        res.status(200).json(jobsResult.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Database error fetching jobs' });
+    }
+};
+
+module.exports = { postJob, getJobs };

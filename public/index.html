@@ -165,6 +165,42 @@
             border: 1px solid rgba(239, 68, 68, 0.2);
         }
 
+        /* Subscriptions List */
+        .my-subscriptions {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--glass-border);
+        }
+        .sub-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(139, 92, 246, 0.1);
+            color: #a78bfa;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            margin: 0.25rem;
+        }
+        .sub-tag button {
+            background: transparent;
+            color: #ef4444;
+            border: none;
+            padding: 0;
+            margin: 0;
+            width: auto;
+            font-size: 1.1rem;
+            line-height: 1;
+            cursor: pointer;
+            box-shadow: none;
+        }
+        .sub-tag button:hover {
+            transform: scale(1.2);
+            color: #f87171;
+        }
+
         /* Job Feed Styles */
         .job-feed {
             display: flex;
@@ -297,6 +333,14 @@
                 <button type="submit">Enable Email Alerts</button>
                 <div id="subMessage" class="message"></div>
             </form>
+
+            <div class="my-subscriptions">
+                <label>Your Subscriptions</label>
+                <div id="myTagsList" style="margin-top: 0.5rem; min-height: 2rem;">
+                    <span style="color:#94a3b8;font-size:0.9rem;">Loading...</span>
+                </div>
+            </div>
+
             <button id="logoutBtn">Log Out</button>
         </div>
 
@@ -474,9 +518,63 @@
             document.body.style.alignItems = 'flex-start';
             document.getElementById('displayName').textContent = localStorage.getItem('name');
             loadJobs();
+            loadMySubscriptions();
         }
 
-        // --- DASHBOARD LOGIC ---
+        // --- SUBSCRIPTION LOGIC ---
+        async function loadMySubscriptions() {
+            const list = document.getElementById('myTagsList');
+            try {
+                const res = await fetch('/api/subscriptions', {
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+                });
+                const tags = await res.json();
+                
+                if (tags.length === 0) {
+                    list.innerHTML = '<span style="color:#94a3b8;font-size:0.9rem;">No subscriptions yet.</span>';
+                    return;
+                }
+
+                list.innerHTML = '';
+                tags.forEach(sub => {
+                    const span = document.createElement('span');
+                    span.className = 'sub-tag';
+                    span.innerHTML = `
+                        ${sub.tag}
+                        <button type="button" onclick="unsubscribe('${sub.tag}')" title="Unsubscribe">&times;</button>
+                    `;
+                    list.appendChild(span);
+                });
+            } catch (err) {
+                list.innerHTML = '<span style="color:#ef4444;font-size:0.9rem;">Failed to load tags.</span>';
+            }
+        }
+
+        async function unsubscribe(tag) {
+            const msgBox = document.getElementById('subMessage');
+            try {
+                const res = await fetch('/api/unsubscribe', {
+                    method: 'DELETE',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    },
+                    body: JSON.stringify({ tag })
+                });
+
+                if (res.ok) {
+                    msgBox.className = 'message success';
+                    msgBox.textContent = 'Unsubscribed from ' + tag;
+                    loadMySubscriptions(); // refresh list
+                } else {
+                    throw new Error('Failed to unsubscribe');
+                }
+            } catch (err) {
+                msgBox.className = 'message error';
+                msgBox.textContent = err.message;
+            }
+        }
+
         document.getElementById('subscribeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const tag = document.getElementById('tag').value;
@@ -489,25 +587,25 @@
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + localStorage.getItem('token')
                     },
-                    body: JSON.stringify({ 
-                        name: localStorage.getItem('name'), 
-                        email: localStorage.getItem('email'), 
-                        tag 
-                    })
+                    body: JSON.stringify({ tag }) // No longer sending email/name, using JWT
                 });
+                
+                const data = await response.json();
 
                 if (response.ok) {
                     msgBox.className = 'message success';
-                    msgBox.textContent = 'Awesome! Subscribed to ' + tag + ' alerts.';
+                    msgBox.textContent = data.message;
+                    loadMySubscriptions(); // refresh list
                 } else {
-                    throw new Error('Failed to subscribe');
+                    throw new Error(data.error || 'Failed to subscribe');
                 }
             } catch (error) {
                 msgBox.className = 'message error';
-                msgBox.textContent = 'Oops! Something went wrong.';
+                msgBox.textContent = error.message || 'Oops! Something went wrong.';
             }
         });
 
+        // --- JOB FEED LOGIC ---
         async function loadJobs() {
             const feed = document.getElementById('jobFeed');
             try {

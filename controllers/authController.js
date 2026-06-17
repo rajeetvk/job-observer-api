@@ -75,7 +75,8 @@ const forgotPassword = async (req, res) => {
             [resetToken, resetExpires, email]
         );
 
-        const resetUrl = `http://localhost:3000/?resetToken=${resetToken}`;
+        const baseUrl = req.headers.origin || `http://${req.headers.host}`;
+        const resetUrl = `${baseUrl}/?resetToken=${resetToken}`;
 
         await emailQueue.add('resetPassword', {
             email: email,

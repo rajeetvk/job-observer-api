@@ -10,8 +10,15 @@ A scalable Node.js application that notifies users of new job postings based on 
 - **JWT Authentication & Bcrypt Security:** Secure user registration, password hashing, and route protection.
 - **Automated Data Ingestion:** Background cron workers fetch remote jobs continuously via API integration.
 - **Real Notifications:** Integration with Nodemailer for actual email delivery.
+- **Containerization & CI/CD:** Fully Dockerized architecture with automatic Continuous Deployment pipelines linked via Render and GitHub.
 - **Glassmorphism Frontend Dashboard:** Beautiful, responsive UI for users to manage subscriptions and view the live job feed.
 
+## 🐳 Docker Deployment (Recommended)
+You can run this entire stack locally with zero configuration using Docker:
+```bash
+docker build -t job-alert .
+docker run -p 3000:3000 --env-file .env job-alert
+```
 ## 💻 Local Setup
 1. Clone the repository
 2. Install dependencies: 

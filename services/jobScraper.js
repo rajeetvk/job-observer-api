@@ -5,7 +5,7 @@ const { emailQueue } = require('./emailQueue');
 
 // This function fetches jobs and processes them
 const fetchAndProcessJobs = async () => {
-    console.log('[CRON] 🕵️‍♂️ Searching the web for new jobs...');
+    console.log('[CRON] Searching the web for new jobs...');
 
     try {
         // 1. Fetch 5 recent remote jobs from the public Remotive API
@@ -26,7 +26,7 @@ const fetchAndProcessJobs = async () => {
                     [job.title, job.company_name, job.url, tags]
                 );
 
-                console.log(`[CRON] 🌟 Found a new job: ${job.title} at ${job.company_name}`);
+                console.log(`[CRON] Found a new job: ${job.title} at ${job.company_name}`);
 
                 // 4. Trigger the Observer! Find who wants this job.
                 const subscribers = await pool.query(
@@ -47,7 +47,7 @@ const fetchAndProcessJobs = async () => {
                 }
             }
         }
-        console.log('[CRON] ✅ Finished processing jobs.');
+        console.log('[CRON] Finished processing jobs.');
     } catch (error) {
         console.error('[CRON] Error fetching jobs:', error.message);
     }

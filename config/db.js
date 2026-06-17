@@ -11,7 +11,7 @@ pool.connect((err, client, release) => {
     if (err) {
         return console.error('Error acquiring client', err.stack);
     }
-    console.log('Successfully connected to the Cloud Database! 🚀');
+    console.log('Successfully connected to the Cloud Database!');
     release();
 });
 module.exports = pool;

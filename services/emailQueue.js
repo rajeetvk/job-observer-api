@@ -62,9 +62,9 @@ const emailWorker = new Worker('EmailAlertsQueue', async (job) => {
 
         // Send the email
         const info = await transporter.sendMail(mailOptions);
-        console.log(`[BACKGROUND WORKER] ✅ Sent Real Email (${job.name}) to ${email} - Message ID: ${info.messageId}`);
+        console.log(`[BACKGROUND WORKER] Sent Real Email (${job.name}) to ${email} - Message ID: ${info.messageId}`);
     } catch (error) {
-        console.error(`[BACKGROUND WORKER] ❌ Failed to send email to ${email}:`, error);
+        console.error(`[BACKGROUND WORKER] Failed to send email to ${email}:`, error);
         throw error; // Re-throw the error so BullMQ knows the job failed and can retry
     }
 

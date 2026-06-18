@@ -8,8 +8,8 @@ const fetchAndProcessJobs = async () => {
     console.log('[CRON] Searching the web for new jobs...');
 
     try {
-        // 1. Fetch 5 recent remote jobs from the public Remotive API
-        const response = await axios.get('https://remotive.com/api/remote-jobs?limit=5');
+        // 1. Fetch 20 recent remote jobs from the public Remotive API
+        const response = await axios.get('https://remotive.com/api/remote-jobs?limit=20');
         const jobs = response.data.jobs;
 
         for (const job of jobs) {
